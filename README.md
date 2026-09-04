@@ -1,6 +1,6 @@
-# Auto-Apply Bot (Naukri & Hirist) 🤖
+# Auto-Apply Bot (Naukri, Hirist & Wellfound) 🤖
 
-Automates job applications on Naukri.com and Hirist.tech using **Playwright** (browser automation) + **OpenRouter AI** (JD matching & Chatbot answering).
+An intelligent, AI-powered automation script that automatically finds and applies to relevant jobs on Naukri, Hirist, and Wellfound.tech using **Playwright** (browser automation) + **OpenRouter AI** (JD matching & Chatbot answering).
 
 ---
 
@@ -11,7 +11,7 @@ Automates job applications on Naukri.com and Hirist.tech using **Playwright** (b
 - **Chatbot Questionnaire Handler:** Automatically answers Naukri recruiter screening questions (e.g. "Notice Period", "CTC", "Experience") using AI to maximize your selection rate.
 - **External Apply Notifications:** Detects if a job requires applying on an external company site and sends the job link directly to your **Telegram**.
 - **Auto-Apply:** Skips previously applied jobs and logs them to `applied_jobs.csv` (Naukri) and `hirist_applied_jobs.csv` (Hirist).
-- **Multi-Platform Support:** Run `naukri_bot.py` for Naukri and `hirist_bot.py` for Hirist. Both use the exact same `job_parameters.md` configuration.
+- **Multi-Platform Support:** Run `naukri_bot.py` for Naukri, `hirist_bot.py` for Hirist, and `wellfound_bot.py` for Wellfound. All use the exact same `job_parameters.md` configuration.
 
 ---
 
@@ -48,7 +48,7 @@ Open a new terminal and run:
 > This opens a fresh Chrome instance that Playwright can attach to.
 
 ### Step 2: Log in
-- In that Chrome window, navigate to https://www.naukri.com and/or https://www.hirist.tech and log in normally.
+- In that Chrome window, navigate to https://www.naukri.com, https://www.hirist.tech, and https://wellfound.com and log in normally.
 
 ### Step 3: Run the Bot
 In a separate terminal (with the virtual environment activated):
@@ -56,11 +56,14 @@ In a separate terminal (with the virtual environment activated):
 cd path\to\repo
 .\venv\Scripts\Activate.ps1
 
-# To run the Naukri Bot:
+# To run Naukri
 python naukri_bot.py
 
-# To run the Hirist Bot:
+# To run Hirist
 python hirist_bot.py
+
+# To run Wellfound
+python wellfound_bot.py
 ```
 
 ---
@@ -68,7 +71,7 @@ python hirist_bot.py
 ## How It Works
 
 ```text
-Search Naukri for roles in job_parameters.md → For each keyword:
+Search sites for roles in job_parameters.md → For each keyword:
     1. Extract all job cards on the page.
     2. Filter out old jobs (> max_job_age_days) and sort by newest.
     3. Quick keyword filter (blacklist check + salary check).
@@ -85,8 +88,9 @@ Search Naukri for roles in job_parameters.md → For each keyword:
 | File | Purpose |
 |------|---------|
 | `naukri_bot.py` | Automation script for Naukri.com |
-| `hirist_bot.py` | Automation script for Hirist.tech |
-| `job_parameters.md` | Your profile, skills, preferences (shared by both bots) |
+| `hirist_bot.py` | Main script for scraping and applying on Hirist. |
+| `wellfound_bot.py` | Main script for scraping and applying on Wellfound. |
+| `job_parameters.md` | Your configuration file (role, experience, skills, blacklist). |
 | `.env` | API key (keep private!) |
 | `applied_jobs.csv` | Auto-generated log of all Naukri applications |
 | `hirist_applied_jobs.csv` | Auto-generated log of all Hirist applications |

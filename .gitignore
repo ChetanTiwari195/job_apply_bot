@@ -20,3 +20,6 @@ job_parameters.md
 
 *.log
 *.csv
+
+test*.py
+*.html
