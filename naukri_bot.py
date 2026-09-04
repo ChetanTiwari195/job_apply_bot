@@ -18,6 +18,7 @@ import re
 import csv
 import time
 import yaml
+import requests
 import asyncio
 import logging
 from pathlib import Path
@@ -239,6 +240,7 @@ QUESTION TO ANSWER:
 class ApplicationLog:
     def __init__(self):
         self.applied: set[str] = set()
+        self.total_rows = 0
         self._load()
 
     def _load(self):
@@ -247,29 +249,37 @@ class ApplicationLog:
                 reader = csv.DictReader(f)
                 for row in reader:
                     self.applied.add(row.get("job_id", ""))
+                    self.total_rows += 1
 
     def already_applied(self, job_id: str) -> bool:
         return job_id in self.applied
 
-    def record(self, job_id: str, title: str, company: str, posted_age: str, score: int, reason: str):
+    def record(self, job_id: str, title: str, company: str, posted_age: str, score: int, reason: str, is_external: bool = False):
         self.applied.add(job_id)
+        self.total_rows += 1
+        
         write_header = not LOG_CSV.exists()
         with open(LOG_CSV, "a", newline="", encoding="utf-8") as f:
             writer = csv.DictWriter(
-                f, fieldnames=["timestamp", "job_id", "title", "company", "posted_age", "score", "reason"]
+                f, fieldnames=["S.No", "timestamp", "job_id", "title", "company", "posted_age", "score", "reason"]
             )
             if write_header:
                 writer.writeheader()
+                
+            status_reason = f"[EXTERNAL] {reason}" if is_external else reason
             writer.writerow({
-                "timestamp": datetime.now().isoformat(),
+                "S.No": self.total_rows,
+                "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M"),
                 "job_id": job_id,
                 "title": title,
                 "company": company,
                 "posted_age": posted_age,
                 "score": score,
-                "reason": reason,
+                "reason": status_reason,
             })
-        log.info(f"[APPLIED] [{score}%] {title} @ {company} (posted: {posted_age})")
+        
+        prefix = "[EXTERNAL APPLIED]" if is_external else "[APPLIED]"
+        log.info(f"{prefix} [{score}%] {title} @ {company} (posted: {posted_age})")
 
 
 # ─────────────────────────────────────────────
@@ -283,6 +293,24 @@ class NaukriBot:
         self.params = params
         self.matcher = matcher
         self.app_log = app_log
+        self.telegram_token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
+        self.telegram_chat_id = os.getenv("TELEGRAM_CHAT_ID", "").strip()
+
+    def send_telegram_alert(self, title: str, company: str, url: str):
+        if not self.telegram_token or not self.telegram_chat_id:
+            return
+        
+        message = f"🚀 *External Application Required*\n\n*Role:* {title}\n*Company:* {company}\n*Link:* {url}"
+        api_url = f"https://api.telegram.org/bot{self.telegram_token}/sendMessage"
+        try:
+            requests.post(api_url, json={
+                "chat_id": self.telegram_chat_id,
+                "text": message,
+                "parse_mode": "Markdown"
+            }, timeout=5)
+            log.info(f"    [Telegram] Sent notification for {title}")
+        except Exception as e:
+            log.warning(f"    [Telegram] Failed to send notification: {e}")
         self.max_jobs = int(params.get("max_jobs_per_run", 50))
         self.keywords = params.get("role_keywords", ["Software Engineer"])
         self.experience = "3"  # years
@@ -457,6 +485,15 @@ class NaukriBot:
             btn_text = (await apply_btn.inner_text()).strip().lower()
             if "applied" in btn_text:
                 log.info(f"    Already applied on Naukri: {job['title']}")
+                return
+                
+            # Check if it takes the user to an external company site
+            if "company site" in btn_text:
+                log.info(f"    [EXTERNAL] Must apply on company site: {job['title']}")
+                self.send_telegram_alert(job['title'], job['company'], href)
+                self.app_log.record(
+                    job["id"], job["title"], job["company"], job["age_str"], score, reason, is_external=True
+                )
                 return
 
             await apply_btn.scroll_into_view_if_needed()

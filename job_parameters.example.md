@@ -93,12 +93,6 @@ skip_already_applied: true
 log_applications: true
 log_file: applied_jobs.csv
 
-# ---------- EXTERNAL APPLY NOTIFICATIONS ----------
-# If a job requires applying on a company website, send the link to Telegram
-# Get your bot token from @BotFather, and your Chat ID from @userinfobot
-telegram_bot_token: ""
-telegram_chat_id: ""
-
 # ---------- JOB FRESHNESS FILTER ----------
 max_job_age_days: 7     # skip any job posted more than 7 days ago
 priority_age_days: 1    # jobs posted within 1 day are processed first
