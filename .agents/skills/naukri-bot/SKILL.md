@@ -26,6 +26,13 @@ Run the bot as a background task using the `run_command` tool:
 ```
 Monitor its progress by reading the background task logs or `bot.log`. 
 
+## Setup (New User)
+If a user does not have a `job_parameters.md` file, you must create one for them:
+1. Do not use `job_parameters.example.md` directly. Read it to understand the required YAML structure.
+2. Ask the user for their Name, Resume (PDF/LaTeX path), current location, preferred roles/keywords, Experience, Current CTC, and Expected CTC. 
+3. If they provide a resume, read it and extract the "Key Highlights", "Education", and "Skills" automatically.
+4. Generate `job_parameters.md` ensuring the exact YAML structure from the example is maintained.
+
 ## Troubleshooting
 - **UnicodeEncodeError (charmap)**: If the bot crashes on Windows due to emojis in logs, ensure the script's Python `logging` configuration explicitly sets `encoding="utf-8"`.
 - **Target Closed / Playwright Timeout**: If the bot fails to attach, the user's Chrome instance is likely not running with the correct remote debugging port, or the port is in use.

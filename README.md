@@ -9,7 +9,8 @@ Automates job applications on Naukri.com using **Playwright** (browser automatio
 - **Freshness Filter:** Automatically skips jobs older than 1 week (or custom limits) to save time and API credits.
 - **Priority Sorting:** Processes jobs posted today/yesterday before looking at older postings.
 - **Chatbot Questionnaire Handler:** Automatically answers Naukri recruiter screening questions (e.g. "Notice Period", "CTC", "Experience") using AI to maximize your selection rate.
-- **Auto-Apply:** Skips previously applied jobs (logs them to `applied_jobs.csv`).
+- **External Apply Notifications:** Detects if a job requires applying on an external company site and sends the job link directly to your **Telegram**.
+- **Auto-Apply:** Skips previously applied jobs and logs them to `applied_jobs.csv` with timestamps and auto-incrementing serial numbers.
 
 ---
 
@@ -30,7 +31,8 @@ playwright install chromium
   OPENROUTER_API_KEY=your_key_here
   OPENROUTER_MODEL=deepseek/deepseek-chat-v3-0324:free
   ```
-- Edit `job_parameters.md` to configure your name, target roles, salary, and blacklist keywords.
+- **Optional**: To enable Telegram notifications for external job links, talk to `@BotFather` and `@userinfobot` on Telegram to get your bot token and chat ID, then add them to `job_parameters.md`.
+- Copy `job_parameters.example.md` to `job_parameters.md` and edit it to configure your name, target roles, salary, and blacklist keywords. Alternatively, ask the AI to generate one for you!
 - Place your resume (PDF or LaTeX) in the `resume/` directory and update the path in `job_parameters.md` if necessary (script auto-detects it).
 
 ---
@@ -68,7 +70,8 @@ Search Naukri for roles in job_parameters.md → For each keyword:
     5. AI scores JD vs your resume (0-100%).
     6. If score >= threshold → Click Apply on JD page.
     7. If Naukri recruiter Chatbot pops up, AI automatically answers questions.
-    8. Log result to applied_jobs.csv.
+    8. If it redirects to a company site, bot sends a Telegram alert with the link.
+    9. Log result to applied_jobs.csv.
 ```
 
 ## Files
