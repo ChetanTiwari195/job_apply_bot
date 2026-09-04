@@ -9,3 +9,7 @@ test_chatbot.py
 mock_naukri_chatbot.html
 .vscode/
 .idea/
+
+# Ignore personal resume files but keep the directory
+resume/*
+!resume/.gitkeep
