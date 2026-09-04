@@ -1,0 +1,110 @@
+\documentclass[letterpaper,11pt]{article}
+\usepackage[empty]{fullpage}
+\usepackage[T1]{fontenc}
+\usepackage[default]{roboto}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{tabularx}
+\usepackage{fontawesome5}
+\input{glyphtounicode}
+\pdfgentounicode=1
+\pagestyle{empty}
+\linespread{1.05}
+\addtolength{\oddsidemargin}{-0.55in}
+\addtolength{\textwidth}{1.1in}
+\addtolength{\topmargin}{-0.75in}
+\addtolength{\textheight}{1.6in}
+\raggedright
+\titleformat{\section}{\normalsize\bfseries}{}{0em}{}[\titlerule]
+\titlespacing*{\section}{0pt}{4pt}{5pt}
+\setlength{\parskip}{0pt}
+
+\newcommand{\resumeItem}[1]{\item\small{#1}}
+\newcommand{\resumeSubheading}[4]{
+\item
+\begin{tabular*}{\textwidth}{l@{\extracolsep{\fill}}r}
+\textbf{#1} & \textbf{\small #2}\\
+\textit{\small #3} & \textit{\small #4}
+\end{tabular*}\vspace{1pt}
+}
+
+\begin{document}
+
+%----------- HEADER -----------
+\begin{center}
+  {\LARGE \textbf{Chetan Tiwari}}\\[2pt]
+  {\small Software Development Engineer $\,\mid\,$ Python $\cdot$ FastAPI $\cdot$ React $\cdot$ TypeScript $\mid$ Backend Systems \& AI-Native Applications}\\[3pt]
+  \faPhone*\ 7007113884 \enspace|\enspace
+  \href{mailto:tiwarichetan212@gmail.com}{\faEnvelope\ tiwarichetan212@gmail.com} \enspace|\enspace
+  \href{https://linkedin.com/in/chetan56tiwari}{\faLinkedin\ chetan56tiwari} \enspace|\enspace
+  \href{https://github.com/ChetanTiwari195}{\faGithub\ ChetanTiwari195} \enspace|\enspace
+  Bengaluru
+\end{center}
+\vspace{-4pt}
+
+%----------- SUMMARY -----------
+% \section*{Summary}
+% \vspace{0pt}
+% \small Backend Engineer with \textbf{3+ years} of experience building production systems in \textbf{Python (FastAPI)} and \textbf{TypeScript/React}, specializing in \textbf{microservices}, \textbf{AI-native applications}, and \textbf{LLM integration}. Built \textbf{150+ APIs} and \textbf{12+ microservices} serving \textbf{1M+ API requests}.
+% \vspace{0pt}
+
+%----------- SKILLS -----------
+\section*{Technical Skills}
+\vspace{2pt}
+\small
+\begin{tabular}{@{}p{ 4.1cm} p{\dimexpr\textwidth-4.1cm}@{}}
+  \textbf{Languages}    & Python, TypeScript, Go (Golang) \\[2pt]
+  \textbf{Backend}      & FastAPI, Django, GraphQL, Kafka, Temporal \\[2pt]
+  \textbf{AI \& ML}     & LLM Integration (OpenAI, Claude), RAG, MCP, LangChain \\[2pt]
+  \textbf{Frontend}     & React.js, Next.js, Tailwind CSS \\[2pt]
+  \textbf{Databases \& DevOps}    & PostgreSQL, Redis,Docker, CI/CD, AWS (EC2, S3, Lambda, Bedrock) \\
+\end{tabular}
+
+%----------- EXPERIENCE -----------
+\section*{Professional Experience}
+\begin{itemize}[leftmargin=0in,label={},topsep=3pt,itemsep=4pt]
+
+\resumeSubheading{FinBox}{Sep 2025 -- Present}{Software Engineer}{Bengaluru}
+\begin{itemize}[leftmargin=0.18in,topsep=3pt,itemsep=2pt,parsep=0pt]
+  \resumeItem{Owned end-to-end backend delivery for \textbf{4 lender loan journeys} (Axis Finance, Hero FinCorp, L\&T Finance, Aditya Birla Finance) on FinBox's Journey Studio platform, each spanning \textbf{50+ API integrations} and \textbf{500+ workflow nodes}.}
+  \resumeItem{Cut lender journey build time from \textbf{2+ months to 3--4 weeks} by driving adoption of configuration-driven workflows and reusable \textbf{Go Activities} in place of custom per-lender backend code.}
+  \resumeItem{Designed and implemented reusable \textbf{Go Activities} (PAN fetch, bureau fetch, velocity checks, Udyam fetch, data/event switches) used across \textbf{10+ lender integrations}, eliminating duplicated integration logic.}
+  \resumeItem{Orchestrated long-running lending workflows with \textbf{Temporal}, handling asynchronous lender callbacks, retries, and idempotent state transitions across \textbf{20+ webhook integrations}.}
+  \resumeItem{Built \textbf{Seedhe Mock}, an internal API virtualization platform (python/FastAPI backend, React.js frontend, PostgreSQL, Docker on AWS) end-to-end; adopted by \textbf{10--20 engineers} across 2--4 teams, cutting mock/API setup effort to \textbf{\textasciitilde20--30\%} of the prior process.}
+  \resumeItem{Owned \textbf{L1 production support} for lender integrations and Temporal workflows --- diagnosed failures via DB queries and logs, executing fixes and redeployments within scope.}
+\end{itemize}
+
+\resumeSubheading{Cronbay Technologies Pvt. Ltd.}{May 2024 -- Sep 2025}{Full Stack Developer}{Bengaluru}
+\begin{itemize}[leftmargin=0.18in,topsep=3pt,itemsep=2pt,parsep=0pt]
+  \resumeItem{Delivered \textbf{4 production-grade web applications} end-to-end using \textbf{React/Next.js}, \textbf{Tailwind CSS}, \textbf{Python (FastAPI)}, and \textbf{PostgreSQL} --- including a full-featured \textbf{heavy machinery e-commerce store} with a dedicated \textbf{admin dashboard} (inventory management, lender product approvals, blog CMS, restocking), driving \textbf{30\% revenue growth}.}
+  \resumeItem{Overhauled legacy frontend by migrating to \textbf{Next.js}, improving page response time and UI fluidity, resulting in \textbf{50\% increase in user retention}.}
+  \resumeItem{Migrated legacy \textbf{PHP/Laravel} backend to \textbf{Python (FastAPI \& Django)}, cutting API response times from \textbf{10--15s to 1--2s} --- a \textbf{7--10$\times$} latency improvement.}
+  \resumeItem{Hardened all platforms with \textbf{JWT authentication}, \textbf{OAuth2}, refresh token rotation, RBAC, and HTTPS enforcement, eliminating unauthenticated access vectors across the entire product suite.}
+  \resumeItem{Built \textbf{LLM-powered lead generation automations} using \textbf{n8n} and \textbf{Apollo.io APIs} --- automatically fetching leads, storing them in Excel, and dispatching AI-personalized outreach emails, increasing company outreach by \textbf{73\%}.}
+\end{itemize}
+
+\end{itemize}
+
+%----------- PROJECTS -----------
+\section*{Projects}
+\begin{itemize}[leftmargin=0in,label={},topsep=3pt,itemsep=4pt]
+
+\resumeSubheading{AI Resume Optimizer --- Chrome Extension}{Aug 2026}{React.js, TypeScript, Python (FastAPI), OpenAI, Claude, REST API}{\href{https://chromewebstore.google.com/detail/resume-optimizer/meomiokepgpjdgifadlogdkednkglkkb?pli=1}{Chrome Web Store}}
+\begin{itemize}[leftmargin=0.18in,topsep=3pt,itemsep=2pt,parsep=0pt]
+  \resumeItem{Engineered a \textbf{full-stack Chrome Extension} with a React.js + TypeScript frontend and async \textbf{FastAPI} REST backend; parses \textbf{PDF and LaTeX} resumes via NLP-based keyword extraction, compares against live job descriptions, and delivers a \textbf{keyword gap analysis} (present vs.\ missing) to guide targeted resume edits.}
+  \resumeItem{Leveraged \textbf{OpenAI and Claude APIs} with \textbf{function calling} for deterministic structured JSON output; achieved \textbf{30--50\% average ATS score improvement}, directly increasing interview shortlist rates for end users.}
+\end{itemize}
+
+\end{itemize}
+
+%----------- EDUCATION -----------
+\section*{Education}
+\vspace{1pt}
+\small
+\textbf{IIIT Bangalore} \hfill 2026--Present\\
+Executive Diploma in Machine Learning \& Artificial Intelligence\\[3pt]
+\textbf{HKBK College of Engineering} \hfill 2020--2024\\
+Bachelor of Technology, Computer Science and Engineering
+
+\end{document}

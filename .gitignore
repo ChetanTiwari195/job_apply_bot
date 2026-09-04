@@ -1,0 +1,11 @@
+venv/
+__pycache__/
+*.pyc
+.env
+bot.log
+applied_jobs.csv
+debug_selectors.py
+test_chatbot.py
+mock_naukri_chatbot.html
+.vscode/
+.idea/
