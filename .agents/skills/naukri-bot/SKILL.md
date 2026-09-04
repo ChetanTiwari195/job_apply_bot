@@ -14,10 +14,10 @@ The Naukri bot automates job applications on Naukri.com. It relies on Playwright
 Before running the bot, always verify:
 1. **Virtual Environment**: Ensure `venv` is activated.
 2. **Dependencies**: `pip install -r requirements.txt` and `playwright install chromium` must have been run.
-3. **Environment Variables**: An `.env` file must exist with `OPENROUTER_API_KEY`.
+3. **Environment Variables**: An `.env` file must exist with `OPENROUTER_API_KEY`, `AI_RELEVANCE_THRESHOLD`, `MAX_JOB_AGE_DAYS`, and `PRIORITY_AGE_DAYS`.
 4. **Browser State**: The user MUST have a Chrome instance running with `--remote-debugging-port=9222` and be logged into Naukri.com. If they haven't started this, provide them with the command to run in a separate terminal:
    `& "C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222 --user-data-dir="C:\temp\chrome-debug"`
-5. **Configuration**: Check that `job_parameters.md` has the desired role keywords, expected salary, and AI threshold.
+5. **Configuration**: Check that `job_parameters.md` has the desired role keywords and expected salary.
 
 ## Execution
 Run the bot as a background task using the `run_command` tool:

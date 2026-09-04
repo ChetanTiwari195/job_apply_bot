@@ -115,7 +115,7 @@ class AIJobMatcher:
         self.model = os.getenv("OPENROUTER_MODEL", "deepseek/deepseek-chat-v3-0324:free")
         self.resume = resume_text
         self.params = params
-        self.threshold = int(params.get("ai_relevance_threshold", 80))
+        self.threshold = int(os.environ["AI_RELEVANCE_THRESHOLD"])
         self.preferred = params.get("preferred_keywords", [])
         self.blacklist = params.get("blacklist_keywords", [])
         self.min_salary = int(params.get("min_expected_lpa", 16))
@@ -144,9 +144,8 @@ class AIJobMatcher:
 You are an expert technical recruiter evaluating whether a candidate should apply to a job.
 
 IMPORTANT RULES:
-- Do NOT penalize for job title mismatch. Focus on SKILLS and DOMAIN fit.
-- A "Data Engineer" or "Platform Engineer" role is still relevant if it needs Python/FastAPI/backend skills.
-- Candidate has 3+ years experience. Accept any role requiring 2+ years (no upper cap).
+- Do NOT penalize for job title mismatch. Focus on SKILLS and DOMAIN fit based on the resume.
+- Candidate has {self.params.get("total_experience", "relevant")} experience. Accept any role requiring >= {self.params.get("min_experience_years", "0")} years (no upper cap).
 - Score based on: skill overlap, domain fit, tech stack alignment, and growth potential.
 - If 60%+ of required skills match, score should be >= 70.
 
@@ -202,17 +201,17 @@ No extra text, just the JSON.
     def answer_chatbot_question(self, question: str) -> str:
         """Use OpenRouter to answer a Naukri chatbot screening question."""
         prompt = f"""
-You are an AI assistant applying for a job on behalf of Chetan Tiwari.
+You are an AI assistant applying for a job on behalf of {self.params.get("name", "the candidate")}.
 You must answer a recruiter's screening question.
 Provide ONLY the exact text to type into the chat box. Be concise and professional.
 DO NOT include any quotation marks around your answer. Keep it under 15 words.
 
 CANDIDATE INFO:
-Name: {self.params.get("name", "Chetan Tiwari")}
-Location: {self.params.get("location_current", "Bengaluru")}
-Current CTC / Expected CTC: Answer based on market standard for 3 years experience (e.g. 15-20 LPA) if asked.
-Notice Period: 30 days.
-Experience: 3+ Years.
+Name: {self.params.get("name", "the candidate")}
+Location: {self.params.get("location_current", "")}
+Current CTC / Expected CTC: {self.params.get("current_ctc", "")} / {self.params.get("expected_ctc", "")}
+Notice Period: {self.params.get("notice_period", "30 days")}
+Experience: {self.params.get("total_experience", "")}
 
 RESUME HIGHLIGHTS:
 {self.resume[:1500]}
@@ -295,6 +294,13 @@ class NaukriBot:
         self.app_log = app_log
         self.telegram_token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
         self.telegram_chat_id = os.getenv("TELEGRAM_CHAT_ID", "").strip()
+        self.limit_reached = False
+        self.keywords = params.get("role_keywords", ["Software Engineer"])
+        self.experience = "3"  # years
+        self.max_age_days = int(os.environ["MAX_JOB_AGE_DAYS"])       # skip jobs older than this
+        self.priority_age_days = int(os.environ["PRIORITY_AGE_DAYS"]) # process these first
+        self.applied_count = 0
+        self.page = None
 
     def send_telegram_alert(self, title: str, company: str, url: str):
         if not self.telegram_token or not self.telegram_chat_id:
@@ -311,13 +317,6 @@ class NaukriBot:
             log.info(f"    [Telegram] Sent notification for {title}")
         except Exception as e:
             log.warning(f"    [Telegram] Failed to send notification: {e}")
-        self.max_jobs = int(params.get("max_jobs_per_run", 50))
-        self.keywords = params.get("role_keywords", ["Software Engineer"])
-        self.experience = "3"  # years
-        self.max_age_days = int(params.get("max_job_age_days", 7))       # skip jobs older than this
-        self.priority_age_days = int(params.get("priority_age_days", 1)) # process these first
-        self.applied_count = 0
-        self.page = None
 
     async def attach_browser(self, playwright):
         """Attach to existing Chrome session with Naukri already logged in."""
@@ -460,6 +459,21 @@ class NaukriBot:
         jd_page = None
         try:
             jd_page = await self.page.context.new_page()
+
+            async def check_limit(response):
+                if response.request.method == "POST" and "apply" in response.url.lower():
+                    try:
+                        if response.status >= 400:
+                            self.limit_reached = True
+                        else:
+                            text = await response.text()
+                            if any(word in text.lower() for word in ["limit", "quota", "exceeded", "maximum"]):
+                                self.limit_reached = True
+                    except:
+                        pass
+            
+            jd_page.on("response", check_limit)
+
             await jd_page.goto(href, wait_until="domcontentloaded", timeout=20000)
             await jd_page.wait_for_timeout(2000)
 
@@ -612,8 +626,8 @@ class NaukriBot:
 
         # ── Process ─────────────────────────────────────────────────────────
         for i, job in enumerate(ordered_jobs):
-            if self.applied_count >= self.max_jobs:
-                log.info(f"Reached max jobs limit ({self.max_jobs}). Stopping.")
+            if self.limit_reached:
+                log.info("Reached Naukri daily application limit (detected via network). Stopping.")
                 return
 
             # Skip already applied
@@ -642,7 +656,7 @@ class NaukriBot:
             browser = await self.attach_browser(playwright)
             try:
                 for keyword in self.keywords:
-                    if self.applied_count >= self.max_jobs:
+                    if self.limit_reached:
                         break
                     await self.run_keyword(keyword)
                     await self.page.wait_for_timeout(2000)  # polite delay between searches

@@ -86,8 +86,10 @@ Search Naukri for roles in job_parameters.md → For each keyword:
 
 ## Customization
 
-Edit `job_parameters.md` to change:
+Edit `.env` to configure automation behavior:
+- `AI_RELEVANCE_THRESHOLD` — how strict the AI filter is (80 = 80%).
+- `MAX_JOB_AGE_DAYS` — skip jobs older than this.
+
+Edit `job_parameters.md` to change your profile:
 - `role_keywords` — what to search on Naukri.
-- `ai_relevance_threshold` — how strict the AI filter is (80 = 80%).
-- `max_job_age_days` — skip jobs older than this.
 - `blacklist_keywords` — instantly skip these job types.

@@ -36,6 +36,7 @@ expected_ctc: [e.g. 16 LPA or more]
 # Experience filter for JD matching:
 min_experience_years: 2   # apply if JD requires 2+ years
 max_experience_years: null  # no upper cap (apply to senior roles too)
+notice_period: 30 days    # used for answering chatbot questions
 
 # ---------- LOCATION PREFERENCES ----------
 preferred_locations:
@@ -84,18 +85,7 @@ education:
     institute: [University Name]
     year: [Year]
 
-# ---------- AUTOMATION SETTINGS ----------
-naukri_login: user_will_provide_active_window
-apply_mode: fully_automated
-ai_relevance_threshold: 80      # only apply if AI match score >= 80%
-max_jobs_per_run: 50            # safety cap per session
-skip_already_applied: true
-log_applications: true
-log_file: applied_jobs.csv
 
-# ---------- JOB FRESHNESS FILTER ----------
-max_job_age_days: 7     # skip any job posted more than 7 days ago
-priority_age_days: 1    # jobs posted within 1 day are processed first
 
 # ---------- JD KEYWORD FILTERS ----------
 # Skip job if ANY of these appear as primary required skill:
