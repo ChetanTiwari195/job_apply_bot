@@ -13,3 +13,6 @@ mock_naukri_chatbot.html
 # Ignore personal resume files but keep the directory
 resume/*
 !resume/.gitkeep
+
+# Ignore user specific parameter file
+job_parameters.md
