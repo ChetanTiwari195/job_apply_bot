@@ -1,6 +1,6 @@
-# Naukri Auto-Apply Bot 🤖
+# Auto-Apply Bot (Naukri & Hirist) 🤖
 
-Automates job applications on Naukri.com using **Playwright** (browser automation) + **OpenRouter AI** (JD matching & Chatbot answering).
+Automates job applications on Naukri.com and Hirist.tech using **Playwright** (browser automation) + **OpenRouter AI** (JD matching & Chatbot answering).
 
 ---
 
@@ -10,7 +10,8 @@ Automates job applications on Naukri.com using **Playwright** (browser automatio
 - **Priority Sorting:** Processes jobs posted today/yesterday before looking at older postings.
 - **Chatbot Questionnaire Handler:** Automatically answers Naukri recruiter screening questions (e.g. "Notice Period", "CTC", "Experience") using AI to maximize your selection rate.
 - **External Apply Notifications:** Detects if a job requires applying on an external company site and sends the job link directly to your **Telegram**.
-- **Auto-Apply:** Skips previously applied jobs and logs them to `applied_jobs.csv` with timestamps and auto-incrementing serial numbers.
+- **Auto-Apply:** Skips previously applied jobs and logs them to `applied_jobs.csv` (Naukri) and `hirist_applied_jobs.csv` (Hirist).
+- **Multi-Platform Support:** Run `naukri_bot.py` for Naukri and `hirist_bot.py` for Hirist. Both use the exact same `job_parameters.md` configuration.
 
 ---
 
@@ -46,15 +47,20 @@ Open a new terminal and run:
 ```
 > This opens a fresh Chrome instance that Playwright can attach to.
 
-### Step 2: Log in to Naukri
-- In that Chrome window, navigate to https://www.naukri.com and log in normally.
+### Step 2: Log in
+- In that Chrome window, navigate to https://www.naukri.com and/or https://www.hirist.tech and log in normally.
 
 ### Step 3: Run the Bot
 In a separate terminal (with the virtual environment activated):
 ```powershell
 cd path\to\repo
 .\venv\Scripts\Activate.ps1
+
+# To run the Naukri Bot:
 python naukri_bot.py
+
+# To run the Hirist Bot:
+python hirist_bot.py
 ```
 
 ---
@@ -78,10 +84,12 @@ Search Naukri for roles in job_parameters.md → For each keyword:
 
 | File | Purpose |
 |------|---------|
-| `naukri_bot.py` | Main automation script |
-| `job_parameters.md` | Your profile, skills, preferences |
+| `naukri_bot.py` | Automation script for Naukri.com |
+| `hirist_bot.py` | Automation script for Hirist.tech |
+| `job_parameters.md` | Your profile, skills, preferences (shared by both bots) |
 | `.env` | API key (keep private!) |
-| `applied_jobs.csv` | Auto-generated log of all applications |
+| `applied_jobs.csv` | Auto-generated log of all Naukri applications |
+| `hirist_applied_jobs.csv` | Auto-generated log of all Hirist applications |
 | `requirements.txt` | Python dependencies |
 
 ## Customization

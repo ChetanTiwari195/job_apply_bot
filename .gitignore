@@ -16,3 +16,7 @@ resume/*
 
 # Ignore user specific parameter file
 job_parameters.md
+
+
+*.log
+*.csv
