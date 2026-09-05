@@ -41,14 +41,27 @@ playwright install chromium
 ## Running the Bot
 
 ### Step 1: Launch Chrome with Remote Debugging
-Open a new terminal and run:
+To run the bots concurrently, you need a separate Chrome instance for each. Open separate terminals and run the corresponding command for the bot(s) you want to use:
+
+**For Naukri (Port 9222):**
 ```powershell
-& "C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222 --user-data-dir="C:\temp\chrome-debug"
+& "C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222 --user-data-dir="C:\temp\chrome-debug-naukri"
 ```
-> This opens a fresh Chrome instance that Playwright can attach to.
+
+**For Hirist (Port 9223):**
+```powershell
+& "C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9223 --user-data-dir="C:\temp\chrome-debug-hirist"
+```
+
+**For Wellfound (Port 9224):**
+```powershell
+& "C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9224 --user-data-dir="C:\temp\chrome-debug-wellfound"
+```
+*(If you are using Command Prompt (`cmd`), simply remove the `& ` from the start of the commands).*
+> This opens fresh Chrome instances that Playwright can attach to concurrently.
 
 ### Step 2: Log in
-- In that Chrome window, navigate to https://www.naukri.com, https://www.hirist.tech, and https://wellfound.com and log in normally.
+- In each respective Chrome window, navigate to the relevant site (https://www.naukri.com, https://www.hirist.tech, or https://wellfound.com) and log in normally.
 
 ### Step 3: Run the Bot
 In a separate terminal (with the virtual environment activated):

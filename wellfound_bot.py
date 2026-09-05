@@ -1,12 +1,13 @@
 import asyncio
 import os
+import re
 import csv
 from datetime import datetime
 from pathlib import Path
 import logging
 from playwright.async_api import async_playwright
 
-from naukri_bot import load_params, load_resume_text, AIJobMatcher
+from naukri_bot import load_params, load_resume_text, AIJobMatcher, send_telegram_alert
 
 BASE_DIR = Path(__file__).parent
 LOG_CSV = BASE_DIR / "wellfound_applied_jobs.csv"
@@ -37,6 +38,33 @@ def record_application(job_url, title, score, reason):
             "reason": reason,
         })
 
+def generate_cover_letter(matcher: AIJobMatcher, title: str, jd: str, params: dict) -> str:
+    """Use OpenRouter to generate a short, personalized note for Wellfound applications."""
+    prompt = f"""
+You are {params.get("name", "the candidate")} applying for {title}.
+Write a very short (2-3 sentences max) personalized note to the recruiter/founder.
+Match the candidate's skills with the job description. Be enthusiastic, punchy, and highly concise.
+DO NOT include subject lines, placeholders like [Your Name], or formal headers/footers (no "Dear X" or "Best, Y").
+Just provide the raw message text.
+
+CANDIDATE EXPERIENCE: {params.get("total_experience", "")}
+RESUME HIGHLIGHTS: {matcher.resume[:1500]}
+
+JOB DESCRIPTION:
+{jd[:1000]}
+"""
+    try:
+        response = matcher.client.chat.completions.create(
+            model=matcher.model,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.3,
+            max_tokens=150,
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        log.error(f"AI cover letter error: {e}")
+        return f"Hi, I'm very interested in the {title} role and would love to discuss how my background fits your team. Thanks!"
+
 def get_applied_urls():
     """Get a set of already applied job URLs from CSV."""
     urls = set()
@@ -57,12 +85,12 @@ async def main():
     # ponytail: connect to existing Chrome, rely on Wellfound's native logged-in feed instead of custom search logic
     async with async_playwright() as p:
         try:
-            browser = await p.chromium.connect_over_cdp("http://localhost:9222")
+            browser = await p.chromium.connect_over_cdp("http://localhost:9224")
             context = browser.contexts[0]
             page = await context.new_page()
             log.info("Connected to Chrome via CDP")
         except Exception as e:
-            log.error("Run Chrome with: chrome.exe --remote-debugging-port=9222")
+            log.error("Run Chrome with: chrome.exe --remote-debugging-port=9224")
             return
 
         applied_count = 0
@@ -111,10 +139,27 @@ async def main():
                     apply_btn = page.locator('button:has-text("Apply")').first
                     if await apply_btn.is_visible():
                         await apply_btn.click()
-                        applied_count += 1
-                        log.info(f"    -> Applied to {title} (Total: {applied_count})")
-                        record_application(href, title, score, reason)
                         await page.wait_for_timeout(2000)
+                        
+                        # After clicking Apply, a modal opens. Check if there's a textarea for a note.
+                        note_textarea = page.locator('textarea').first
+                        if await note_textarea.is_visible():
+                            log.info(f"    -> Generating personalized note for {title}...")
+                            note_text = generate_cover_letter(matcher, title, jd, params)
+                            await note_textarea.fill(note_text)
+                            await page.wait_for_timeout(1000)
+                            
+                        # Click the final submit button inside the modal
+                        submit_btn = page.locator('button:has-text("Send application")').first
+                        if await submit_btn.is_visible():
+                            await submit_btn.click()
+                            applied_count += 1
+                            log.info(f"    -> Applied to {title} (Total: {applied_count})")
+                            record_application(href, title, score, reason)
+                            send_telegram_alert(title, "Wellfound", href, is_external=False)
+                            await page.wait_for_timeout(2000)
+                        else:
+                            log.info(f"    -> Could not find 'Send application' button for {title}")
                         
                         if applied_count >= 100:
                             log.info("Reached maximum application limit of 100. Stopping.")

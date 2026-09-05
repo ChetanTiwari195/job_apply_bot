@@ -129,12 +129,10 @@ class AIJobMatcher:
             if kw.lower() in combined:
                 return False, f"Blacklisted keyword: {kw}"
 
-        # Salary check if mentioned
-        salary_match = re.findall(r"(\d+)\s*(?:lpa|l\.?p\.?a|lakhs?)", combined)
-        if salary_match:
-            max_salary = max(int(s) for s in salary_match)
-            if max_salary < self.min_salary:
-                return False, f"Salary {max_salary} LPA below minimum {self.min_salary} LPA"
+        # Salary check (matches LPA, Lakhs, ₹XL, $Xk formats in one go)
+        salaries = [int(s) for s in re.findall(r"(?:₹|\$)?(\d+)\s*(?:lpa|l\.?p\.?a|lakhs?|[Ll]|[Kk])\b", combined)]
+        if salaries and max(salaries) < self.min_salary:
+            return False, f"Salary {max(salaries)} below minimum {self.min_salary}"
 
         return True, "Passed quick filter"
 
@@ -284,39 +282,42 @@ class ApplicationLog:
 # ─────────────────────────────────────────────
 # NAUKRI BOT
 # ─────────────────────────────────────────────
+# NOTIFICATIONS
+# ─────────────────────────────────────────────
+def send_telegram_alert(title: str, company: str, url: str, is_external: bool = False):
+    token = (os.getenv("TELEGRAM_BOT_TOKEN") or "").strip()
+    chat_id = str(os.getenv("TELEGRAM_CHAT_ID") or "").strip()
+    if not token or not chat_id:
+        return
+    
+    header = "🚀 *External Application Required*" if is_external else "✅ *Successfully Applied*"
+    message = f"{header}\n\n*Role:* {title}\n*Company:* {company}\n*Link:* {url}"
+    try:
+        requests.post(f"https://api.telegram.org/bot{token}/sendMessage", json={
+            "chat_id": chat_id,
+            "text": message,
+            "parse_mode": "Markdown"
+        }, timeout=5)
+        log.info(f"    [Telegram] Sent notification for {title}")
+    except Exception as e:
+        log.warning(f"    [Telegram] Failed to send notification: {e}")
+
+# ─────────────────────────────────────────────
 class NaukriBot:
     NAUKRI_BASE = "https://www.naukri.com"
     SEARCH_URL = "https://www.naukri.com/jobs-in-india?keyword={keyword}&experience={exp}&nignoreIndexp=false"
 
-    def __init__(self, params: dict, matcher: AIJobMatcher, app_log: ApplicationLog):
+    def __init__(self, params: dict):
         self.params = params
-        self.matcher = matcher
-        self.app_log = app_log
-        self.telegram_token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
-        self.telegram_chat_id = os.getenv("TELEGRAM_CHAT_ID", "").strip()
+        self.matcher = AIJobMatcher(load_resume_text(params), params)
+        self.app_log = ApplicationLog()
         self.limit_reached = False
         self.keywords = params.get("role_keywords", ["Software Engineer"])
-        self.experience = "3"  # years
-        self.max_age_days = int(os.environ["MAX_JOB_AGE_DAYS"])       # skip jobs older than this
-        self.priority_age_days = int(os.environ["PRIORITY_AGE_DAYS"]) # process these first
+        self.experience = str(params.get("min_experience_years", "0"))  # years
+        self.max_age_days = int(os.environ.get("MAX_JOB_AGE_DAYS", "7"))       # skip jobs older than this
+        self.priority_age_days = int(os.environ.get("PRIORITY_AGE_DAYS", "1")) # process these first
         self.applied_count = 0
         self.page = None
-
-    def send_telegram_alert(self, title: str, company: str, url: str):
-        if not self.telegram_token or not self.telegram_chat_id:
-            return
-        
-        message = f"🚀 *External Application Required*\n\n*Role:* {title}\n*Company:* {company}\n*Link:* {url}"
-        api_url = f"https://api.telegram.org/bot{self.telegram_token}/sendMessage"
-        try:
-            requests.post(api_url, json={
-                "chat_id": self.telegram_chat_id,
-                "text": message,
-                "parse_mode": "Markdown"
-            }, timeout=5)
-            log.info(f"    [Telegram] Sent notification for {title}")
-        except Exception as e:
-            log.warning(f"    [Telegram] Failed to send notification: {e}")
 
     async def attach_browser(self, playwright):
         """Attach to existing Chrome session with Naukri already logged in."""
@@ -504,9 +505,9 @@ class NaukriBot:
             # Check if it takes the user to an external company site
             if "company site" in btn_text:
                 log.info(f"    [EXTERNAL] Must apply on company site: {job['title']}")
-                self.send_telegram_alert(job['title'], job['company'], href)
+                send_telegram_alert(job['title'], job['company'], href, is_external=True)
                 self.app_log.record(
-                    job["id"], job["title"], job["company"], job["age_str"], score, reason, is_external=True
+                    job["job_id"], job["title"], job["company"], job.get("age_text", "unknown"), score, reason, is_external=True
                 )
                 return
 
@@ -626,9 +627,9 @@ class NaukriBot:
 
         # ── Process ─────────────────────────────────────────────────────────
         for i, job in enumerate(ordered_jobs):
-            if self.limit_reached:
-                log.info("Reached Naukri daily application limit (detected via network). Stopping.")
-                return
+            # if self.limit_reached:
+            #     log.info("Reached Naukri daily application limit (detected via network). Stopping.")
+            #     return
 
             # Skip already applied
             if self.app_log.already_applied(job["job_id"]):
@@ -656,8 +657,8 @@ class NaukriBot:
             browser = await self.attach_browser(playwright)
             try:
                 for keyword in self.keywords:
-                    if self.limit_reached:
-                        break
+                    # if self.limit_reached:
+                    #     break
                     await self.run_keyword(keyword)
                     await self.page.wait_for_timeout(2000)  # polite delay between searches
             finally:
@@ -676,13 +677,7 @@ async def main():
     params = load_params()
     log.info(f"Loaded parameters for: {params.get('name')}")
 
-    resume_text = load_resume_text(params)
-    log.info(f"Resume loaded ({len(resume_text)} chars)")
-
-    matcher = AIJobMatcher(resume_text, params)
-    app_log = ApplicationLog()
-
-    bot = NaukriBot(params, matcher, app_log)
+    bot = NaukriBot(params)
     await bot.run()
 
 

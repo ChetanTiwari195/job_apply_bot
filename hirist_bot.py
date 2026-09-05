@@ -7,7 +7,7 @@ import logging
 from playwright.async_api import async_playwright
 
 # Reuse existing logic to stay DRY (Don't Repeat Yourself)
-from naukri_bot import load_params, load_resume_text, AIJobMatcher
+from naukri_bot import load_params, load_resume_text, AIJobMatcher, send_telegram_alert
 
 BASE_DIR = Path(__file__).parent
 LOG_CSV = BASE_DIR / "hirist_applied_jobs.csv"
@@ -58,12 +58,12 @@ async def main():
     # ponytail: connect to existing Chrome instead of managing logins/captchas
     async with async_playwright() as p:
         try:
-            browser = await p.chromium.connect_over_cdp("http://localhost:9222")
+            browser = await p.chromium.connect_over_cdp("http://localhost:9223")
             context = browser.contexts[0]
             page = await context.new_page()
             log.info("Connected to Chrome via CDP")
         except Exception as e:
-            log.error("Run Chrome with: chrome.exe --remote-debugging-port=9222")
+            log.error("Run Chrome with: chrome.exe --remote-debugging-port=9223")
             return
 
         applied_count = 0
@@ -170,6 +170,7 @@ async def main():
                                 applied_count += 1
                                 log.info(f"    -> Applied to {title} (Total: {applied_count})")
                                 record_application(href, title, score, reason)
+                                send_telegram_alert(title, "Hirist", href, is_external=False)
                                 await page.wait_for_timeout(2000)
                                 
                                 if applied_count >= 100:
