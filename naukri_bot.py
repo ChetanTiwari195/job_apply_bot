@@ -124,10 +124,7 @@ class AIJobMatcher:
         """Fast keyword-based pre-filter before calling AI."""
         combined = (title + " " + jd).lower()
 
-        # Blacklist check
-        for kw in self.blacklist:
-            if kw.lower() in combined:
-                return False, f"Blacklisted keyword: {kw}"
+        # Hardcoded blacklist removed. AI will now evaluate the blacklist contextually.
 
         # Salary check (matches LPA, Lakhs, ₹XL, $Xk formats in one go)
         salaries = [int(s) for s in re.findall(r"(?:₹|\$)?(\d+)\s*(?:lpa|l\.?p\.?a|lakhs?|[Ll]|[Kk])\b", combined)]
@@ -144,6 +141,7 @@ You are an expert technical recruiter evaluating whether a candidate should appl
 IMPORTANT RULES:
 - Do NOT penalize for job title mismatch. Focus on SKILLS and DOMAIN fit based on the resume.
 - Candidate has {self.params.get("total_experience", "relevant")} experience. Accept any role requiring >= {self.params.get("min_experience_years", "0")} years (no upper cap).
+- BLACKLIST: If the core role primarily requires any of these technologies, penalize heavily (score < 40): {', '.join(self.blacklist)}
 - Score based on: skill overlap, domain fit, tech stack alignment, and growth potential.
 - If 60%+ of required skills match, score should be >= 70.
 
